@@ -74,6 +74,9 @@ const option = ref({
   },
   yAxis: {
     type: 'value',
+    axisLabel: {
+      formatter: '{value} 人'
+    }
   },
   series: [],
 })
@@ -135,7 +138,7 @@ const appBoxRef = ref()
 const chartObj = ref()
 
 onMounted(() => {
-  chartObj.value = echarts.init(appBoxRef.value)
+  chartObj.value = echarts.init(appBoxRef.value, 'dark')
   chartObj.value.setOption(option.value)
 })
 </script>

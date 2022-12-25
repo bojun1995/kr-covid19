@@ -61,7 +61,10 @@
     ]
   },
   "yAxis": {
-    "type": "value"
+    "type": "value",
+    "axisLabel": {
+      "formatter": "{value} 人"
+    }
   },
   "series": [
     {
