@@ -1,24 +1,27 @@
 <template>
-  <div ref="appBoxRef" class="app-box"></div>
+  <div id="appBox" class="app-box"></div>
 </template>
 
 <script setup>
 import * as echarts from 'echarts'
 import jsonData from '@/assets/kr_covid19_data.json'
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import dayjs from 'dayjs'
 
 // 处理数据
 jsonData.reverse()
-const parsedJsonData = ref([])
+const parsedJsonData = []
 const parsedJsonDataObj = {}
 jsonData.forEach((row) => {
-  const month = dayjs(row['日期']).format('YYYY-MM')
-  if (parsedJsonDataObj[month] === undefined) {
-    parsedJsonDataObj[month] = []
+  const yearMonth = dayjs(row['日期']).format('YYYY-MM')
+  const month = dayjs(row['日期']).format('MM')
+  if (parsedJsonDataObj[yearMonth] === undefined) {
+    parsedJsonDataObj[yearMonth] = []
   }
+  row.yearMonth = yearMonth
   row.month = month
-  parsedJsonDataObj[month].push(row)
+  row['日期'] = dayjs(row['日期']).format('YYYY-MM-DD')
+  parsedJsonDataObj[yearMonth].push(row)
 })
 
 for (const pObjKey in parsedJsonDataObj) {
@@ -32,8 +35,10 @@ for (const pObjKey in parsedJsonDataObj) {
     死亡新增: 0,
     现存病例: 0,
   }
-  dataByMonth.forEach(row => {
-    ret['日期'] = row.month
+  dataByMonth.forEach((row) => {
+    ret['month'] = row['month']
+    ret['yearMonth'] = row['yearMonth']
+    ret['日期'] = row['日期']
     ret['累计确诊'] += row['累计确诊']
     ret['新增病例'] += row['新增病例']
     ret['累计治愈'] += row['累计治愈']
@@ -41,25 +46,28 @@ for (const pObjKey in parsedJsonDataObj) {
     ret['死亡新增'] += row['死亡新增']
     ret['现存病例'] += row['现存病例']
   })
-  parsedJsonData.value.push(ret)
+  parsedJsonData.push(ret)
 }
 
 // echarts
-const option = ref({
+const option = {
   title: {
-    text: '2020-Now Korea Covid-19 Stacked Line',
+    text: '2020-Now Korea Covid-19',
+    left: 'center',
+    top: '30px',
   },
   tooltip: {
     trigger: 'axis',
   },
   legend: {
-    data: ['累计确诊', '新增病例', '累计治愈', '累计死亡', '死亡新增', '现存病例'],
+    data: [],
+    top: '80px',
   },
   grid: {
-    top: '10%',
-    bottom: '10%',
-    left: '5%',
-    right: '5%',
+    top: '150px',
+    bottom: '50px',
+    left: '50px',
+    right: '50px',
     containLabel: true,
   },
   toolbox: {
@@ -75,11 +83,11 @@ const option = ref({
   yAxis: {
     type: 'value',
     axisLabel: {
-      formatter: '{value} 人'
-    }
+      formatter: '{value}人',
+    },
   },
   series: [],
-})
+}
 
 if (jsonData) {
   const xAxisData = []
@@ -121,7 +129,8 @@ if (jsonData) {
       data: [],
     },
   ]
-  parsedJsonData.value.forEach((row) => {
+  // '累计确诊', '累计治愈', '累计死亡', '现存病例', '新增病例', '死亡新增'
+  parsedJsonData.forEach((row) => {
     xAxisData.push(row['日期'])
     series[0].data.push(row['累计确诊'])
     series[1].data.push(row['新增病例'])
@@ -130,16 +139,15 @@ if (jsonData) {
     series[4].data.push(row['死亡新增'])
     series[5].data.push(row['现存病例'])
   })
-  option.value.xAxis.data = xAxisData
-  option.value.series = series
+  option.xAxis.data = xAxisData
+  option.series = series
 }
 
-const appBoxRef = ref()
-const chartObj = ref()
+let chartObj = {}
 
 onMounted(() => {
-  chartObj.value = echarts.init(appBoxRef.value, 'dark')
-  chartObj.value.setOption(option.value)
+  chartObj = echarts.init(document.getElementById('appBox'), 'dark')
+  chartObj.setOption(option)
 })
 </script>
 
